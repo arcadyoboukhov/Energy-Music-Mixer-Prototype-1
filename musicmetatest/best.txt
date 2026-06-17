@@ -1,0 +1,1 @@
+python audio_features.py --input "C:\Users\Admin\Documents\Energy music mixer\musicmetatest\1-01 Mood (Remix).flac" --out-json features.json 
