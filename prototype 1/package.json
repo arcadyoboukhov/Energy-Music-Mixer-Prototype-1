@@ -1,0 +1,12 @@
+{
+  "name": "music-scanner",
+  "version": "0.1.0",
+  "description": "Minimal Electron app to scan a folder for mp3/flac files",
+  "main": "main.js",
+  "scripts": {
+    "start": "electron ."
+  },
+  "devDependencies": {
+    "electron": "^25.0.0"
+  }
+}

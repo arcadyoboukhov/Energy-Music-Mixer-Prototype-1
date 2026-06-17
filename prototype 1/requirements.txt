@@ -1,0 +1,5 @@
+librosa
+numpy
+scikit-learn
+soundfile
+spotipy

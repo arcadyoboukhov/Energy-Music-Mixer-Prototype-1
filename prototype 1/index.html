@@ -1,0 +1,162 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>Energy — Party Controller</title>
+    <style>
+      :root{--bg:#0f1720;--card:#0b1220;--muted:#9aa4b2;--accent:#ff6b6b;--accent2:#4bd09b}
+      html,body{height:100%;margin:0}
+      body{font-family:Inter,Segoe UI,system-ui,Helvetica,Arial,sans-serif;background:linear-gradient(180deg,#071018 0%, #081426 60%);color:#e6eef6;display:flex;align-items:center;justify-content:center}
+      .app{width:980px;max-width:96%;min-height:640px;background:radial-gradient(ellipse at top left, rgba(255,255,255,0.02), transparent),var(--card);border-radius:12px;padding:20px;box-shadow:0 10px 40px rgba(2,6,23,0.6)}
+      .header{display:flex;align-items:center;justify-content:space-between}
+      .logo{font-weight:700;font-size:18px}
+      .subtitle{color:var(--muted);font-size:13px}
+      .pane{margin-top:18px}
+      /* Onboarding */
+      .onboard{display:flex;gap:16px;align-items:center;justify-content:center;flex-direction:column;padding:28px}
+      .onboard .title{font-size:22px;font-weight:700}
+      .onboard .cards{display:flex;gap:12px}
+      .card{background:linear-gradient(180deg, rgba(255,255,255,0.02), transparent);padding:16px;border-radius:10px;min-width:180px;text-align:center}
+      .btn{background:transparent;border:1px solid rgba(255,255,255,0.06);padding:10px 14px;border-radius:10px;color:inherit;cursor:pointer}
+      .btn.primary{background:var(--accent);color:#071018;border:none}
+      /* Main UI */
+      .topbar{display:flex;align-items:center;justify-content:space-between}
+      .party-status{font-size:14px}
+      .energy-display{font-size:13px;color:var(--muted)}
+      .center{display:flex;align-items:center;gap:18px;margin-top:20px}
+      .energy-card{flex:1;background:linear-gradient(180deg, rgba(255,255,255,0.02), transparent);padding:18px;border-radius:12px}
+      .energy-labels{display:flex;justify-content:space-between;color:var(--muted);font-size:13px}
+      .slider{width:100%;margin:12px 0}
+      .controls{display:flex;flex-direction:column;gap:12px;width:260px}
+      .large-btn{padding:16px;border-radius:12px;border:none;background:#0f2730;color:#dff7ee;font-weight:600;cursor:pointer}
+      /* singalong UI removed */
+      .now-playing{margin-top:18px;padding:12px;border-radius:10px;background:linear-gradient(180deg, rgba(255,255,255,0.01), transparent);display:flex;align-items:center;justify-content:space-between}
+      .muted{color:var(--muted)}
+      .hidden{display:none}
+    </style>
+  </head>
+  <body>
+    <div class="app">
+      <div class="header">
+        <div>
+          <div class="logo">🎨 Energy — Party Controller</div>
+          <div class="subtitle">Control the vibe, not the playlist.</div>
+        </div>
+        <div class="muted">Prototype • UI/UX Part 2</div>
+      </div>
+
+      <div class="pane">
+        <!-- Onboarding -->
+        <div id="onboard" class="onboard">
+          <div class="title">🎉 Welcome — Where's your music?</div>
+            <div class="cards">
+            <div class="card">
+              <div style="font-size:20px">📁</div>
+              <div style="margin-top:8px;font-weight:600">Import files</div>
+              <div class="muted" style="margin-top:6px">Scan local tracks</div>
+              <div style="margin-top:10px"><button id="importFiles" class="btn">Import</button></div>
+              <div style="margin-top:8px">
+                <progress id="scanProgress" value="0" max="100" style="width:220px;height:14px;border-radius:6px"></progress>
+                <div id="scanStatus" class="muted" style="margin-top:6px">No scan yet</div>
+              </div>
+            </div>
+            </div>
+
+          <div style="margin-top:16px">
+            <div class="title">🧭 Tell me what you want</div>
+            <div style="margin-top:10px">
+              <input id="onboardPrompt" placeholder="Describe the music you want, e.g. 'soft music to fall asleep to'" style="width:420px;max-width:94%;padding:8px;border-radius:8px;border:1px solid rgba(255,255,255,0.04);background:transparent;color:inherit">
+            </div>
+          </div>
+
+          <div style="margin-top:18px">
+            <button id="startParty" class="btn primary" disabled>👉 START PARTY</button>
+          </div>
+        </div>
+
+        <!-- Main party UI -->
+        <div id="mainUI" class="hidden">
+          <div class="topbar">
+            <div>
+              <div class="party-status" id="partyStatus">🔥 Party is idle</div>
+              <div class="energy-display" id="energyLine">Energy: <span id="energyValue">65</span> → <span id="energyTrend">stable</span></div>
+            </div>
+            <div class="muted">Now controlling: <span id="currentVibe">—</span></div>
+          </div>
+
+          <!-- Real-time human-friendly feedback -->
+          <div id="feedbackMessage" style="margin-top:10px;padding:10px;border-radius:8px;background:rgba(255,255,255,0.02);font-weight:600;color:#cfe9ff">Ready to steer the party</div>
+
+          <div class="center">
+            <div class="energy-card">
+              <div style="font-weight:700">🎚️ Energy Slider</div>
+              <div class="energy-labels"><div>Chill</div><div>Hype</div></div>
+              <input id="energySlider" class="slider" type="range" min="0" max="100" value="65" />
+              <div style="margin-top:10px">
+                <label for="nlPrompt" style="font-weight:700;display:block;margin-bottom:6px">Tell me what you want</label>
+                <input id="nlPrompt" placeholder="e.g. 'I want rave music so hard that my head falls off'" style="width:100%;padding:8px;border-radius:8px;border:1px solid rgba(255,255,255,0.04);background:transparent;color:inherit">
+              </div>
+              <div style="display:flex;align-items:center;justify-content:space-between">
+                <div class="muted">Drag to steer the vibe</div>
+                <div id="sliderValue" style="font-weight:700">(65)</div>
+              </div>
+            </div>
+
+            <div class="controls">
+              <button id="moreHype" class="large-btn">🔥 More Hype</button>
+              <button id="chillDown" class="large-btn" style="background:#153246">🌊 Chill It Down</button>
+              <!-- Singalong removed -->
+              <div style="margin-top:8px;display:flex;gap:8px;justify-content:center">
+                <button id="playBtn" class="btn primary">▶ Play</button>
+                <button id="pauseBtn" class="btn">⏸ Pause</button>
+                <button id="skipBtn" class="btn">⏭ Skip</button>
+              </div>
+              <div style="margin-top:8px">
+                <button id="advancedToggle" class="btn">Advanced ▾</button>
+              </div>
+              <div id="advancedPanel" class="hidden" style="margin-top:8px;padding:10px;border-radius:8px;background:linear-gradient(180deg, rgba(255,255,255,0.01), transparent);">
+                <div style="font-weight:700;margin-bottom:6px">Advanced (power users)</div>
+                <div style="margin-bottom:8px"><label class="muted">Genre filter:</label><input id="genreFilter" placeholder="e.g. house, disco" style="width:100%;margin-top:6px;padding:6px;border-radius:6px;border:1px solid rgba(255,255,255,0.04)"></div>
+                <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px"><input id="explicitToggle" type="checkbox"><label class="muted">Hide explicit tracks</label></div>
+                <div style="margin-bottom:8px"><label class="muted">Tempo bias</label><input id="tempoBias" type="range" min="-50" max="50" value="0" style="width:100%"><div id="tempoBiasValue" class="muted" style="text-align:right">(0)</div></div>
+                <div style="display:flex;gap:8px;justify-content:flex-end"><button id="saveAdvanced" class="btn">Save</button></div>
+              </div>
+            </div>
+          </div>
+
+          <div class="now-playing">
+            <div>
+              <div style="font-weight:700">Now Playing</div>
+              <div class="muted" id="nowTrack">(none)</div>
+            </div>
+            <div style="text-align:right">
+              <div class="muted">Next (subtle)</div>
+              <div id="nextTrack" class="muted">(queued)</div>
+            </div>
+          </div>
+          
+          <div id="guestPanel" style="margin-top:14px;padding:12px;border-radius:10px;background:linear-gradient(180deg, rgba(255,255,255,0.01), transparent);display:flex;align-items:center;justify-content:space-between">
+            <div style="display:flex;align-items:center;gap:12px">
+              <div>
+                <div style="font-weight:700">👥 Guest Mode</div>
+                <div class="muted">Guests join via QR to suggest & upvote</div>
+                <div style="margin-top:8px"><img id="guestQR" src="" alt="guest-qr" style="width:120px;height:120px;border-radius:8px;background:#071620"></div>
+                <div style="margin-top:6px;color:var(--muted);font-size:12px"><span id="guestUrl">(not ready)</span></div>
+              </div>
+            </div>
+            <div style="width:360px">
+              <div style="font-weight:700">Requests</div>
+              <div id="guestList" style="margin-top:8px;color:var(--muted);max-height:120px;overflow:auto">No requests yet.</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Failure prompt removed (host-choice modal disabled) -->
+
+    </div>
+    <script src="renderer.js"></script>
+  </body>
+</html>
